@@ -1,4 +1,4 @@
-# Tunely v1.0.0 — pemutar musik ciptaan Azri
+# Tunely v1.1.0 — pemutar musik ciptaan Azri
 
 TikTok: @realajriinii · Telegram: @nobledevelopment
 
@@ -12,14 +12,15 @@ TikTok: @realajriinii · Telegram: @nobledevelopment
 - Halaman **Tentang**: nama pembuat (bisa diganti), versi Tunely, TikTok, Telegram.
 
 ## Sumber musik
-Audius (API publik tanpa key). YouTube Music tidak dipakai karena tidak punya API resmi dan
-tidak bisa diputar di latar belakang secara native tanpa library tambahan.
+Katalog YouTube Music (pencarian lagu lewat server publik Piped, audio diputar native di latar belakang).
+Kalau server YouTube sibuk, otomatis pindah ke Audius sebagai cadangan.
+Server publik kadang lambat atau down; aplikasi mencoba beberapa server berurutan.
 
 ## Pasang lewat Termux + GitHub
 ```bash
 pkg install unzip git -y
 cd ~ && unzip -o /sdcard/Download/Tunely.zip && cd Tunely
-git init && git add . && git commit -m "Tunely v1.0.0"
+git init && git add . && git commit -m "Tunely v1.1.0"
 git branch -M main
 git remote add origin https://github.com/USERNAME/Tunely.git
 git push -u https://USERNAME:TOKEN@github.com/USERNAME/Tunely.git main

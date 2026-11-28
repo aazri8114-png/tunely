@@ -45,36 +45,46 @@ input.s{width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--g
 <img class="art" id="na"><h3 id="nt"></h3><p id="nn"></p>
 <input type="range" id="sk" min="0" max="100" value="0" step=".1" oninput="seek(this.value)"><div class="tm"><span id="c1">0:00</span><span id="c2">0:00</span></div>
 <div class="ctl"><button class="ib" id="bs" onclick="shuf()">🔀</button><button class="ib" onclick="prev()">⏮</button><button class="ib play" id="np2" onclick="tog()">▶</button><button class="ib" onclick="next()">⏭</button><button class="ib" id="br" onclick="rep()">🔁</button></div>
-<div class="ctl"><button class="ib" id="bl" onclick="fav(cur)">♡</button><button class="ib" onclick="sleep()" id="bz">😴</button><button class="ib" onclick="share()">⤴</button></div>
+<div class="ctl"><button class="ib" id="bl" onclick="fav(cur)">♡</button><button class="ib" onclick="sleep()" id="bz">😴</button><button class="ib" onclick="addPl()">📁</button><button class="ib" onclick="share()">⤴</button></div>
 <div id="q"></div></section>
 <script>
-const VER="1.0.0",BUILD="2026.11",$=s=>document.getElementById(s);
+const VER="1.1.0",BUILD="2026.11",$=s=>document.getElementById(s);
 const S=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},W=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let favs=S('f',[]),hist=S('h',[]),pls=S('p',{}),owner=S('o','Azri'),queue=[],qi=-1,cur=null,ready=false,shuffle=false,rep_=0,st=null,tab='home',pending=null,sleepT=null;
 const AU="https://api.audius.co/v1";
+let INST=["https://pipedapi.kavin.rocks","https://pipedapi.adminforge.de","https://api.piped.private.coffee","https://pipedapi.leptons.xyz","https://piped-api.garudalinux.org"];
+async function tf(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||7000);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw 0;return await r.json()}finally{clearTimeout(t)}}
+async function pipe(path){for(const a of INST.slice(0,8)){try{const j=await tf(a+path);if(a!==INST[0])INST=[a,...INST.filter(x=>x!=a)];return j}catch(e){}}throw 0}
+tf("https://piped-instances.kavin.rocks/",6000).then(l=>{const n=l.map(i=>i.api_url).filter(Boolean);INST=[...new Set([...INST,...n])]}).catch(()=>{});
 const mapT=j=>(j.data||[]).filter(t=>t.id&&t.title).map(t=>({id:t.id,t:t.title,a:(t.user&&t.user.name)||"",img:(t.artwork&&(t.artwork["480x480"]||t.artwork["150x150"]))||"",url:AU+"/tracks/"+t.id+"/stream?app_name=Tunely",d:t.duration}));
-async function search(q){try{const r=await fetch(AU+"/tracks/search?query="+encodeURIComponent(q)+"&limit=24&app_name=Tunely");return mapT(await r.json())}catch(e){toast("Gagal memuat. Cek internet.");return[]}}
-async function trending(g){try{const r=await fetch(AU+"/tracks/trending?limit=24&app_name=Tunely"+(g?"&genre="+encodeURIComponent(g):""));return mapT(await r.json())}catch(e){return[]}}
+async function search(q){
+try{const j=await pipe("/search?q="+encodeURIComponent(q)+"&filter=music_songs");
+const l=(j.items||[]).filter(i=>i.url&&i.url.includes("v=")).map(i=>{const v=i.url.split("v=")[1].split("&")[0];return{id:"y"+v,vid:v,t:i.title,a:(i.uploaderName||"").replace(" - Topic",""),img:"https://i.ytimg.com/vi/"+v+"/hqdefault.jpg",d:i.duration}});
+if(l.length)return l}catch(e){}
+try{const r=await tf(AU+"/tracks/search?query="+encodeURIComponent(q)+"&limit=24&app_name=Tunely");const l=mapT(r);if(l.length){toast("Server YouTube sibuk, pakai sumber cadangan");return l}}catch(e){}
+toast("Gagal memuat. Cek internet.");return[]}
+async function resolve(s){if(s.url)return s.url;const j=await pipe("/streams/"+s.vid);const A=j.audioStreams||[];const a=A.filter(x=>(x.mimeType||"").includes("mp4")).sort((x,y)=>y.bitrate-x.bitrate)[0]||A[0];if(!a||!a.url)throw 0;return a.url}
 const IC={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',lib:'<path d="M4 4v16M9 4v16M14 6l6 14"/>',about:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>'};
 const TB={home:"Beranda",search:"Cari",lib:"Koleksi",about:"Tentang"};
 function tabs(){$('tabs').innerHTML=Object.keys(TB).map(k=>`<button class="${tab==k?'on':''}" onclick="go('${k}')"><svg viewBox="0 0 24 24">${IC[k]}</svg>${TB[k]}</button>`).join("")}
 function go(t){tab=t;tabs();$('v').scrollTop=0;({home,search:srch,lib,about})[t]()}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-let reg={};function reg_(l){l.forEach(s=>reg[s.id]=s);return l}
+let reg=S('r',{});function saveReg(){const k=new Set([...favs,...hist.slice(0,100),...Object.values(pls).flat()]);const o={};k.forEach(i=>{if(reg[i])o[i]=reg[i]});W('r',o)}function reg_(l){l.forEach(s=>reg[s.id]=s);return l}
 function item(s,list,i){return `<div class="item"><img src="${s.img}" loading="lazy" onclick="playList('${list}',${i})"><div onclick="playList('${list}',${i})"><b>${esc(s.t)}</b><span>${esc(s.a)}</span></div><button onclick="fav('${s.id}')">${favs.includes(s.id)?'♥':'♡'}</button><button onclick="addQ('${s.id}')">＋</button></div>`}
 let lists={};function mk(name,l){lists[name]=reg_(l);return name}
 async function home(){const h=new Date().getHours(),g=h<11?"Selamat pagi":h<15?"Selamat siang":h<19?"Selamat sore":"Selamat malam";
 $('v').innerHTML=`<h1>${g}, ${esc(owner)}</h1><div id="hr"></div>`;
 if(hist.length){const l=mk('hist',hist.map(i=>reg[i]).filter(Boolean));if(lists.hist.length)$('hr').innerHTML+=`<h2>Terakhir diputar</h2><div class="row">${lists.hist.slice(0,12).map((s,i)=>`<div class="card" onclick="playList('hist',${i})"><img src="${s.img}"><b>${esc(s.t)}</b><span>${esc(s.a)}</span></div>`).join("")}</div>`}
-for(const [n,q] of [["Lagi populer",""],["Pop","Pop"],["Hip-Hop/Rap","Hip-Hop/Rap"],["Electronic","Electronic"],["Santai & Lofi","Lo-Fi"]]){
+for(const [n,q] of [["Hits Indonesia","lagu indonesia terbaru 2026"],["Top Global","top hits 2026"],["Pop Barat","pop hits"],["Santai & Lofi","lofi chill"],["Galau","lagu galau indonesia"]]){
 const sec=document.createElement('div');sec.innerHTML=`<h2>${n}</h2><div class="row"><div class="empty">Memuat…</div></div>`;$('hr').appendChild(sec);
-trending(q).then(l=>{const k=mk('h_'+n,l);sec.querySelector('.row').innerHTML=l.slice(0,12).map((s,i)=>`<div class="card" onclick="playList('${k}',${i})"><img src="${s.img}" loading="lazy"><b>${esc(s.t)}</b><span>${esc(s.a)}</span></div>`).join("")||"<div class='empty'>Kosong</div>"})}}
+search(q).then(l=>{const k=mk('h_'+n,l);sec.querySelector('.row').innerHTML=l.slice(0,12).map((s,i)=>`<div class="card" onclick="playList('${k}',${i})"><img src="${s.img}" loading="lazy"><b>${esc(s.t)}</b><span>${esc(s.a)}</span></div>`).join("")||"<div class='empty'>Kosong</div>"})}}
 function srch(){$('v').innerHTML=`<h1>Cari</h1><input class="s" id="sq" placeholder="Lagu, artis, album…" enterkeypress><div style="margin-top:14px">${["Pop","Hip-Hop","Dangdut","Rock","K-Pop","Jazz","EDM","Akustik"].map(c=>`<span class="chip" onclick="dos('${c} music')">${c}</span>`).join("")}</div><div id="sr"></div>`;
-$('sq').addEventListener('keydown',e=>{if(e.key=='Enter')dos(e.target.value)})}
-async function dos(q){if(!q.trim())return;$('sq').value=q;$('sr').innerHTML='<div class="empty">Mencari…</div>';const l=await search(q),k=mk('s',l);$('sr').innerHTML=l.map((s,i)=>item(s,k,i)).join("")||'<div class="empty">Tidak ada hasil</div>'}
+$('sq').addEventListener('keydown',e=>{if(e.key=='Enter')dos(e.target.value)});let dt;$('sq').addEventListener('input',e=>{clearTimeout(dt);dt=setTimeout(()=>dos(e.target.value),700)})}
+let stok=0;async function dos(q){if(!q.trim())return;const tk=++stok;$('sq').value=q;$('sr').innerHTML='<div class="empty">Mencari…</div>';const l=await search(q);if(tk!==stok)return;const k=mk('s',l);$('sr').innerHTML=l.map((s,i)=>item(s,k,i)).join("")||'<div class="empty">Tidak ada hasil</div>'}
 function lib(){const fl=mk('fav',favs.map(i=>reg[i]).filter(Boolean));
 $('v').innerHTML=`<h1>Koleksi</h1><h2>Favorit (${favs.length})</h2>${lists.fav.map((s,i)=>item(s,'fav',i)).join("")||'<div class="empty">Tekan ♡ untuk menyimpan lagu</div>'}<h2>Playlist</h2><button class="chip" style="border:0;color:#fff" onclick="newPl()">＋ Playlist baru</button>${Object.keys(pls).map(n=>`<div class="item"><div onclick="playPl('${esc(n)}')"><b>${esc(n)}</b><span>${pls[n].length} lagu</span></div><button onclick="delPl('${esc(n)}')">🗑</button></div>`).join("")}<h2>Riwayat</h2>${hist.slice(0,30).map(i=>reg[i]).filter(Boolean).map((s,i)=>item(s,mk('hl',hist.slice(0,30).map(i=>reg[i]).filter(Boolean)),i)).join("")||'<div class="empty">Belum ada</div>'}`}
+function addPl(){if(!cur)return;const n=Object.keys(pls);if(!n.length)return toast('Buat playlist dulu di Koleksi');const x=prompt('Masukkan ke playlist:\n'+n.join(', '),n[0]);if(x&&pls[x]){if(!pls[x].includes(cur.id))pls[x].push(cur.id);W('p',pls);saveReg();toast('Masuk ke '+x)}else if(x)toast('Playlist tidak ditemukan')}
 function newPl(){const n=prompt("Nama playlist");if(n){pls[n]=[];W('p',pls);lib()}}
 function delPl(n){delete pls[n];W('p',pls);lib()}
 function playPl(n){const l=pls[n].map(i=>reg[i]).filter(Boolean);if(!l.length)return toast("Playlist kosong");mk('pl',l);playList('pl',0)}
@@ -87,13 +97,13 @@ function about(){$('v').innerHTML=`<div class="logo">♪</div><h1 style="text-al
 const N=window.TunelyNative,au=new Audio();let ns={pos:0,dur:0,playing:false},lastP=null;
 const P={pauseVideo(){N?N.pause():au.pause()},playVideo(){N?N.resume():au.play()},getPlayerState(){return (N?ns.playing:!au.paused)?1:2},getCurrentTime(){return N?ns.pos/1000:au.currentTime},getDuration(){return N?ns.dur/1000:(au.duration||0)},seekTo(s){N?N.seek(Math.floor(s*1000)):(au.currentTime=s)}};
 au.onended=()=>ended();au.onplay=()=>ui(true);au.onpause=()=>ui(false);
-function load(s){if(N)N.play(s.url,s.t,s.a,s.img);else{au.src=s.url;au.play()}}
+let loadTok=0;async function load(s){const tk=++loadTok;toast('Memuat…');try{const u=await resolve(s);if(tk!==loadTok)return;if(N)N.play(u,s.t,s.a,s.img);else{au.src=u;au.play()}}catch(e){if(tk===loadTok)toast('Lagu gagal dimuat, coba lagu lain')}}
 function poll(){if(!N)return;const a=N.state().split("|");ns={pos:+a[0],dur:+a[1],playing:a[2]=="1"};
 if(ns.playing!==lastP){lastP=ns.playing;ui(ns.playing)}tick();
 if(a[4]=="next")next();else if(a[4]=="prev")prev();else if(a[3]=="1")ended()}
 setInterval(poll,500);
 function playList(n,i){queue=lists[n].slice();qi=i;playAt()}
-function playAt(){cur=queue[qi];if(!cur)return;load(cur);hist=[cur.id,...hist.filter(x=>x!=cur.id)].slice(0,100);W('h',hist);reg[cur.id]=cur;info()}
+function playAt(){cur=queue[qi];if(!cur)return;load(cur);hist=[cur.id,...hist.filter(x=>x!=cur.id)].slice(0,100);W('h',hist);reg[cur.id]=cur;saveReg();info()}
 function info(){const s=cur;if(!s)return;$('mini').style.display='flex';$('mi').src=s.img;$('mt').textContent=s.t;$('ma').textContent=s.a;$('na').src=s.img;$('nt').textContent=s.t;$('nn').textContent=s.a;$('bl').textContent=favs.includes(s.id)?'♥':'♡';$('bl').classList.toggle('on-a',favs.includes(s.id));
 if('mediaSession' in navigator&&!N){navigator.mediaSession.metadata=new MediaMetadata({title:s.t,artist:s.a,album:'Tunely',artwork:[{src:s.img,sizes:'480x480',type:'image/jpeg'}]});
 for(const [a,f] of [['play',()=>P.playVideo()],['pause',()=>P.pauseVideo()],['nexttrack',next],['previoustrack',prev]])try{navigator.mediaSession.setActionHandler(a,f)}catch(e){}}showQ(1)}
@@ -107,11 +117,11 @@ function prev(){if(!queue.length)return;if(P.getCurrentTime()>4)return P.seekTo(
 function ended(){if(rep_==2){P.seekTo(0);P.playVideo()}else if(rep_==1||qi<queue.length-1||shuffle)next();else ui(false)}
 function shuf(){shuffle=!shuffle;$('bs').classList.toggle('on-a',shuffle);toast(shuffle?'Acak aktif':'Acak mati')}
 function rep(){rep_=(rep_+1)%3;$('br').classList.toggle('on-a',rep_>0);$('br').textContent=rep_==2?'🔂':'🔁';toast(['Ulang mati','Ulang semua','Ulang satu lagu'][rep_])}
-function fav(id){if(!id)return;id=id.id||id;favs=favs.includes(id)?favs.filter(x=>x!=id):[id,...favs];W('f',favs);if(cur)info();if(tab=='lib')lib();toast(favs.includes(id)?'Ditambahkan ke Favorit':'Dihapus dari Favorit')}
+function fav(id){if(!id)return;id=id.id||id;favs=favs.includes(id)?favs.filter(x=>x!=id):[id,...favs];W('f',favs);saveReg();if(cur)info();if(tab=='lib')lib();toast(favs.includes(id)?'Ditambahkan ke Favorit':'Dihapus dari Favorit')}
 function addQ(id){const s=reg[id];if(!s)return;if(!queue.length){queue=[s];qi=0;playAt()}else{queue.push(s);toast('Masuk antrean');showQ(1)}}
 function showQ(q){$('q').innerHTML=queue.length?`<h2 style="font-size:17px">Antrean</h2>`+queue.map((s,i)=>`<div class="item" onclick="qi=${i};playAt()"><img src="${s.img}"><div><b ${i==qi?'style="color:var(--ac)"':''}>${esc(s.t)}</b><span>${esc(s.a)}</span></div></div>`).join(""):""}
 function sleep(){const m=prompt("Matikan musik dalam berapa menit? (0 = batal)","30");if(m===null)return;clearTimeout(sleepT);sleepT=null;$('bz').classList.remove('on-a');if(+m>0){sleepT=setTimeout(()=>{P.pauseVideo();sleepT=null;$('bz').classList.remove('on-a')},m*60000);$('bz').classList.add('on-a');toast('Sleep timer '+m+' menit')}}
-function share(){if(!cur)return;const u=cur.url;navigator.share?navigator.share({title:cur.t,url:u}):(navigator.clipboard&&navigator.clipboard.writeText(u),toast('Tautan disalin'))}
+function share(){if(!cur)return;const u=(cur.vid?"https://music.youtube.com/watch?v="+cur.vid:cur.url);navigator.share?navigator.share({title:cur.t,url:u}):(navigator.clipboard&&navigator.clipboard.writeText(u),toast('Tautan disalin'))}
 function openNP(){$('np').classList.add('open')}function closeNP(){$('np').classList.remove('open')}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&P&&cur&&P.getPlayerState&&P.getPlayerState()==2&&!window._u)setTimeout(()=>{},0)});
 tabs();home();
