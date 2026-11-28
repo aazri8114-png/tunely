@@ -1,0 +1,7 @@
+<resources>
+    <style name="Tunely" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#0b0a14</item>
+        <item name="android:navigationBarColor">#0b0a14</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>

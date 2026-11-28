@@ -1,0 +1,118 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0a14"><title>Tunely</title>
+<style>
+:root{--bg:#0b0a14;--tx:#f5f3ff;--mu:#9a96b8;--ac:#ff4d7d;--ac2:#7c5cff;--g:rgba(255,255,255,.12)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,"SF Pro Display",system-ui,Roboto,sans-serif;overflow:hidden}
+#glow{position:fixed;inset:-20%;background:radial-gradient(circle at 20% 10%,var(--ac2),transparent 45%),radial-gradient(circle at 85% 40%,var(--ac),transparent 40%);opacity:.28;filter:blur(40px);transition:.8s}
+main{position:fixed;inset:0;overflow-y:auto;padding:calc(env(safe-area-inset-top) + 16px) 18px 200px}
+h1{font-size:34px;letter-spacing:-.8px;margin:8px 0 14px}h2{font-size:21px;margin:22px 0 10px;letter-spacing:-.4px}
+.row{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.row::-webkit-scrollbar{display:none}
+.card{flex:0 0 140px}.card img{width:140px;height:140px;border-radius:16px;object-fit:cover;background:#222}
+.card b,.item b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px}
+.card span,.item span{font-size:12px;color:var(--mu)}
+.item{display:flex;align-items:center;gap:12px;padding:8px 0}.item img{width:52px;height:52px;border-radius:10px;object-fit:cover;background:#222}
+.item div{flex:1;min-width:0}.item b{margin:0;white-space:nowrap}.item button{background:none;border:0;color:var(--mu);font-size:20px;padding:8px}
+.glass{background:rgba(40,36,64,.42);backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%);border:1px solid var(--g);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(255,255,255,.06),0 10px 40px rgba(0,0,0,.45)}
+#tabs{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 12px);height:68px;border-radius:34px;display:flex;justify-content:space-around;align-items:center;padding:0 8px;z-index:20}
+#tabs button{position:relative;background:none;border:0;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;padding:8px 14px;border-radius:26px;transition:.35s cubic-bezier(.3,1.4,.5,1)}
+#tabs button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#tabs button.on{color:#fff;background:rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.4);transform:scale(1.06)}
+#mini{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 90px);height:62px;border-radius:24px;display:none;align-items:center;gap:10px;padding:8px 12px 8px 8px;z-index:19}
+#mini img{width:46px;height:46px;border-radius:12px;object-fit:cover}#mini div{flex:1;min-width:0}#mini b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#mini span{font-size:12px;color:var(--mu)}
+.ib{background:none;border:0;color:var(--tx);font-size:22px;padding:6px 8px}
+#np{position:fixed;inset:0;z-index:30;background:linear-gradient(#1a1533,#0b0a14);transform:translateY(100%);transition:.45s cubic-bezier(.2,.9,.2,1);padding:calc(env(safe-area-inset-top) + 14px) 26px calc(env(safe-area-inset-bottom) + 24px);display:flex;flex-direction:column;overflow-y:auto}
+#np.open{transform:none}#np .art{width:100%;aspect-ratio:1;border-radius:28px;object-fit:cover;box-shadow:0 30px 80px rgba(0,0,0,.6);margin:14px 0 22px;transition:.4s}
+#np.paused .art{transform:scale(.88)}
+#np h3{margin:0;font-size:24px;letter-spacing:-.4px}#np p{margin:4px 0 14px;color:var(--mu)}
+input[type=range]{width:100%;accent-color:var(--ac)}.tm{display:flex;justify-content:space-between;font-size:11px;color:var(--mu)}
+.ctl{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.ctl .ib{font-size:26px}.ctl .play{font-size:34px;width:74px;height:74px;border-radius:50%;background:#fff;color:#000;padding:0}
+.on-a{color:var(--ac)!important}
+input.s{width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--g);background:rgba(255,255,255,.08);color:var(--tx);font-size:16px;outline:0}
+.chip{display:inline-block;padding:8px 14px;margin:0 8px 8px 0;border-radius:20px;background:rgba(255,255,255,.1);font-size:13px}
+.box{padding:18px;border-radius:22px;margin:12px 0}.box div{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--g)}.box div:last-child{border:0}
+.logo{width:92px;height:92px;border-radius:24px;background:linear-gradient(135deg,var(--ac2),var(--ac));display:grid;place-items:center;font-size:46px;margin:10px auto}
+#toast{position:fixed;top:calc(env(safe-area-inset-top) + 10px);left:50%;transform:translate(-50%,-80px);padding:10px 18px;border-radius:20px;z-index:50;transition:.4s;font-size:13px}#toast.show{transform:translate(-50%,0)}
+#yt{position:fixed;width:2px;height:2px;opacity:.01;bottom:0;right:0;pointer-events:none}
+.empty{color:var(--mu);padding:30px 0;text-align:center}
+</style></head><body>
+<div id="glow"></div><main id="v"></main>
+<div id="mini" class="glass" onclick="openNP()"><img id="mi"><div><b id="mt"></b><span id="ma"></span></div><button class="ib" id="mp" onclick="event.stopPropagation();tog()">▶</button><button class="ib" onclick="event.stopPropagation();next()">⏭</button></div>
+<nav id="tabs" class="glass"></nav><div id="toast" class="glass"></div>
+<section id="np">
+<div style="display:flex;justify-content:space-between"><button class="ib" onclick="closeNP()">⌄</button><button class="ib" onclick="showQ()">☰</button></div>
+<img class="art" id="na"><h3 id="nt"></h3><p id="nn"></p>
+<input type="range" id="sk" min="0" max="100" value="0" step=".1" oninput="seek(this.value)"><div class="tm"><span id="c1">0:00</span><span id="c2">0:00</span></div>
+<div class="ctl"><button class="ib" id="bs" onclick="shuf()">🔀</button><button class="ib" onclick="prev()">⏮</button><button class="ib play" id="np2" onclick="tog()">▶</button><button class="ib" onclick="next()">⏭</button><button class="ib" id="br" onclick="rep()">🔁</button></div>
+<div class="ctl"><button class="ib" id="bl" onclick="fav(cur)">♡</button><button class="ib" onclick="sleep()" id="bz">😴</button><button class="ib" onclick="share()">⤴</button></div>
+<div id="q"></div></section>
+<script>
+const VER="1.0.0",BUILD="2026.11",$=s=>document.getElementById(s);
+const S=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},W=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let favs=S('f',[]),hist=S('h',[]),pls=S('p',{}),owner=S('o','Azri'),queue=[],qi=-1,cur=null,P,ready=false,shuffle=false,rep_=0,st=null,tab='home',pending=null,sleepT=null;
+const AU="https://api.audius.co/v1";
+const mapT=j=>(j.data||[]).filter(t=>t.id&&t.title).map(t=>({id:t.id,t:t.title,a:(t.user&&t.user.name)||"",img:(t.artwork&&(t.artwork["480x480"]||t.artwork["150x150"]))||"",url:AU+"/tracks/"+t.id+"/stream?app_name=Tunely",d:t.duration}));
+async function search(q){try{const r=await fetch(AU+"/tracks/search?query="+encodeURIComponent(q)+"&limit=24&app_name=Tunely");return mapT(await r.json())}catch(e){toast("Gagal memuat. Cek internet.");return[]}}
+async function trending(g){try{const r=await fetch(AU+"/tracks/trending?limit=24&app_name=Tunely"+(g?"&genre="+encodeURIComponent(g):""));return mapT(await r.json())}catch(e){return[]}}
+const IC={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',lib:'<path d="M4 4v16M9 4v16M14 6l6 14"/>',about:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>'};
+const TB={home:"Beranda",search:"Cari",lib:"Koleksi",about:"Tentang"};
+function tabs(){$('tabs').innerHTML=Object.keys(TB).map(k=>`<button class="${tab==k?'on':''}" onclick="go('${k}')"><svg viewBox="0 0 24 24">${IC[k]}</svg>${TB[k]}</button>`).join("")}
+function go(t){tab=t;tabs();$('v').scrollTop=0;({home,search:srch,lib,about})[t]()}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+let reg={};function reg_(l){l.forEach(s=>reg[s.id]=s);return l}
+function item(s,list,i){return `<div class="item"><img src="${s.img}" loading="lazy" onclick="playList('${list}',${i})"><div onclick="playList('${list}',${i})"><b>${esc(s.t)}</b><span>${esc(s.a)}</span></div><button onclick="fav('${s.id}')">${favs.includes(s.id)?'♥':'♡'}</button><button onclick="addQ('${s.id}')">＋</button></div>`}
+let lists={};function mk(name,l){lists[name]=reg_(l);return name}
+async function home(){const h=new Date().getHours(),g=h<11?"Selamat pagi":h<15?"Selamat siang":h<19?"Selamat sore":"Selamat malam";
+$('v').innerHTML=`<h1>${g}, ${esc(owner)}</h1><div id="hr"></div>`;
+if(hist.length){const l=mk('hist',hist.map(i=>reg[i]).filter(Boolean));if(lists.hist.length)$('hr').innerHTML+=`<h2>Terakhir diputar</h2><div class="row">${lists.hist.slice(0,12).map((s,i)=>`<div class="card" onclick="playList('hist',${i})"><img src="${s.img}"><b>${esc(s.t)}</b><span>${esc(s.a)}</span></div>`).join("")}</div>`}
+for(const [n,q] of [["Lagi populer",""],["Pop","Pop"],["Hip-Hop/Rap","Hip-Hop/Rap"],["Electronic","Electronic"],["Santai & Lofi","Lo-Fi"]]){
+const sec=document.createElement('div');sec.innerHTML=`<h2>${n}</h2><div class="row"><div class="empty">Memuat…</div></div>`;$('hr').appendChild(sec);
+trending(q).then(l=>{const k=mk('h_'+n,l);sec.querySelector('.row').innerHTML=l.slice(0,12).map((s,i)=>`<div class="card" onclick="playList('${k}',${i})"><img src="${s.img}" loading="lazy"><b>${esc(s.t)}</b><span>${esc(s.a)}</span></div>`).join("")||"<div class='empty'>Kosong</div>"})}}
+function srch(){$('v').innerHTML=`<h1>Cari</h1><input class="s" id="sq" placeholder="Lagu, artis, album…" enterkeypress><div style="margin-top:14px">${["Pop","Hip-Hop","Dangdut","Rock","K-Pop","Jazz","EDM","Akustik"].map(c=>`<span class="chip" onclick="dos('${c} music')">${c}</span>`).join("")}</div><div id="sr"></div>`;
+$('sq').addEventListener('keydown',e=>{if(e.key=='Enter')dos(e.target.value)})}
+async function dos(q){if(!q.trim())return;$('sq').value=q;$('sr').innerHTML='<div class="empty">Mencari…</div>';const l=await search(q),k=mk('s',l);$('sr').innerHTML=l.map((s,i)=>item(s,k,i)).join("")||'<div class="empty">Tidak ada hasil</div>'}
+function lib(){const fl=mk('fav',favs.map(i=>reg[i]).filter(Boolean));
+$('v').innerHTML=`<h1>Koleksi</h1><h2>Favorit (${favs.length})</h2>${lists.fav.map((s,i)=>item(s,'fav',i)).join("")||'<div class="empty">Tekan ♡ untuk menyimpan lagu</div>'}<h2>Playlist</h2><button class="chip" style="border:0;color:#fff" onclick="newPl()">＋ Playlist baru</button>${Object.keys(pls).map(n=>`<div class="item"><div onclick="playPl('${esc(n)}')"><b>${esc(n)}</b><span>${pls[n].length} lagu</span></div><button onclick="delPl('${esc(n)}')">🗑</button></div>`).join("")}<h2>Riwayat</h2>${hist.slice(0,30).map(i=>reg[i]).filter(Boolean).map((s,i)=>item(s,mk('hl',hist.slice(0,30).map(i=>reg[i]).filter(Boolean)),i)).join("")||'<div class="empty">Belum ada</div>'}`}
+function newPl(){const n=prompt("Nama playlist");if(n){pls[n]=[];W('p',pls);lib()}}
+function delPl(n){delete pls[n];W('p',pls);lib()}
+function playPl(n){const l=pls[n].map(i=>reg[i]).filter(Boolean);if(!l.length)return toast("Playlist kosong");mk('pl',l);playList('pl',0)}
+function about(){$('v').innerHTML=`<div class="logo">♪</div><h1 style="text-align:center">Tunely</h1><p style="text-align:center;color:var(--mu);margin:0">Musik tanpa batas, tampil cantik.</p>
+<div class="box glass"><div><span>Versi Tunely</span><b>${VER}</b></div><div><span>Build</span><b>${BUILD}</b></div><div><span>Dibuat oleh</span><b id="ow">${esc(owner)}</b></div></div>
+<input class="s" id="on" placeholder="Ganti nama kamu" value="${esc(owner)}"><button class="chip" style="border:0;color:#fff;margin-top:10px" onclick="owner=$('on').value||owner;W('o',owner);about();toast('Nama disimpan')">Simpan nama</button>
+<div class="box glass"><div><span>TikTok</span><b>@realajriinii</b></div><div><span>Telegram</span><b>@nobledevelopment</b></div></div>
+<div class="box glass"><div><span>Putar di latar belakang</span><b>Aktif</b></div><div><span>Sleep timer</span><b>${sleepT?'Aktif':'Mati'}</b></div></div>`}
+// pemutar: native (foreground service) di APK, <audio> di browser
+const N=window.TunelyNative,au=new Audio();let ns={pos:0,dur:0,playing:false},lastP=null;
+const P={pauseVideo(){N?N.pause():au.pause()},playVideo(){N?N.resume():au.play()},getPlayerState(){return (N?ns.playing:!au.paused)?1:2},getCurrentTime(){return N?ns.pos/1000:au.currentTime},getDuration(){return N?ns.dur/1000:(au.duration||0)},seekTo(s){N?N.seek(Math.floor(s*1000)):(au.currentTime=s)}};
+au.onended=()=>ended();au.onplay=()=>ui(true);au.onpause=()=>ui(false);
+function load(s){if(N)N.play(s.url,s.t,s.a,s.img);else{au.src=s.url;au.play()}}
+function poll(){if(!N)return;const a=N.state().split("|");ns={pos:+a[0],dur:+a[1],playing:a[2]=="1"};
+if(ns.playing!==lastP){lastP=ns.playing;ui(ns.playing)}tick();
+if(a[4]=="next")next();else if(a[4]=="prev")prev();else if(a[3]=="1")ended()}
+setInterval(poll,500);
+function playList(n,i){queue=lists[n].slice();qi=i;playAt()}
+function playAt(){cur=queue[qi];if(!cur)return;load(cur);hist=[cur.id,...hist.filter(x=>x!=cur.id)].slice(0,100);W('h',hist);reg[cur.id]=cur;info()}
+function info(){const s=cur;if(!s)return;$('mini').style.display='flex';$('mi').src=s.img;$('mt').textContent=s.t;$('ma').textContent=s.a;$('na').src=s.img;$('nt').textContent=s.t;$('nn').textContent=s.a;$('bl').textContent=favs.includes(s.id)?'♥':'♡';$('bl').classList.toggle('on-a',favs.includes(s.id));
+if('mediaSession' in navigator&&!N){navigator.mediaSession.metadata=new MediaMetadata({title:s.t,artist:s.a,album:'Tunely',artwork:[{src:s.img,sizes:'480x480',type:'image/jpeg'}]});
+for(const [a,f] of [['play',()=>P.playVideo()],['pause',()=>P.pauseVideo()],['nexttrack',next],['previoustrack',prev]])try{navigator.mediaSession.setActionHandler(a,f)}catch(e){}}showQ(1)}
+function ui(p){$('mp').textContent=p?'⏸':'▶';$('np2').textContent=p?'⏸':'▶';$('np').classList.toggle('paused',!p);if(!N){clearInterval(st);if(p)st=setInterval(tick,500)}}
+const fmt=t=>{t=Math.floor(t||0);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
+function tick(){const d=P.getDuration(),c=P.getCurrentTime();if(d){$('sk').value=c/d*100;$('c1').textContent=fmt(c);$('c2').textContent=fmt(d)}}
+function seek(v){P.seekTo(P.getDuration()*v/100)}
+function tog(){if(!cur)return;P.getPlayerState()==1?P.pauseVideo():P.playVideo()}
+function next(){if(!queue.length)return;qi=shuffle?Math.floor(Math.random()*queue.length):(qi+1)%queue.length;playAt()}
+function prev(){if(!queue.length)return;if(P.getCurrentTime()>4)return P.seekTo(0);qi=(qi-1+queue.length)%queue.length;playAt()}
+function ended(){if(rep_==2){P.seekTo(0);P.playVideo()}else if(rep_==1||qi<queue.length-1||shuffle)next();else ui(false)}
+function shuf(){shuffle=!shuffle;$('bs').classList.toggle('on-a',shuffle);toast(shuffle?'Acak aktif':'Acak mati')}
+function rep(){rep_=(rep_+1)%3;$('br').classList.toggle('on-a',rep_>0);$('br').textContent=rep_==2?'🔂':'🔁';toast(['Ulang mati','Ulang semua','Ulang satu lagu'][rep_])}
+function fav(id){if(!id)return;id=id.id||id;favs=favs.includes(id)?favs.filter(x=>x!=id):[id,...favs];W('f',favs);if(cur)info();if(tab=='lib')lib();toast(favs.includes(id)?'Ditambahkan ke Favorit':'Dihapus dari Favorit')}
+function addQ(id){const s=reg[id];if(!s)return;if(!queue.length){queue=[s];qi=0;playAt()}else{queue.push(s);toast('Masuk antrean');showQ(1)}}
+function showQ(q){$('q').innerHTML=queue.length?`<h2 style="font-size:17px">Antrean</h2>`+queue.map((s,i)=>`<div class="item" onclick="qi=${i};playAt()"><img src="${s.img}"><div><b ${i==qi?'style="color:var(--ac)"':''}>${esc(s.t)}</b><span>${esc(s.a)}</span></div></div>`).join(""):""}
+function sleep(){const m=prompt("Matikan musik dalam berapa menit? (0 = batal)","30");if(m===null)return;clearTimeout(sleepT);sleepT=null;$('bz').classList.remove('on-a');if(+m>0){sleepT=setTimeout(()=>{P.pauseVideo();sleepT=null;$('bz').classList.remove('on-a')},m*60000);$('bz').classList.add('on-a');toast('Sleep timer '+m+' menit')}}
+function share(){if(!cur)return;const u=cur.url;navigator.share?navigator.share({title:cur.t,url:u}):(navigator.clipboard&&navigator.clipboard.writeText(u),toast('Tautan disalin'))}
+function openNP(){$('np').classList.add('open')}function closeNP(){$('np').classList.remove('open')}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&P&&cur&&P.getPlayerState&&P.getPlayerState()==2&&!window._u)setTimeout(()=>{},0)});
+tabs();home();
+</script></body></html>
