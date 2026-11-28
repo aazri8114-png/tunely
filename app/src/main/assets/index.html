@@ -50,7 +50,7 @@ input.s{width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--g
 <script>
 const VER="1.0.0",BUILD="2026.11",$=s=>document.getElementById(s);
 const S=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},W=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-let favs=S('f',[]),hist=S('h',[]),pls=S('p',{}),owner=S('o','Azri'),queue=[],qi=-1,cur=null,P,ready=false,shuffle=false,rep_=0,st=null,tab='home',pending=null,sleepT=null;
+let favs=S('f',[]),hist=S('h',[]),pls=S('p',{}),owner=S('o','Azri'),queue=[],qi=-1,cur=null,ready=false,shuffle=false,rep_=0,st=null,tab='home',pending=null,sleepT=null;
 const AU="https://api.audius.co/v1";
 const mapT=j=>(j.data||[]).filter(t=>t.id&&t.title).map(t=>({id:t.id,t:t.title,a:(t.user&&t.user.name)||"",img:(t.artwork&&(t.artwork["480x480"]||t.artwork["150x150"]))||"",url:AU+"/tracks/"+t.id+"/stream?app_name=Tunely",d:t.duration}));
 async function search(q){try{const r=await fetch(AU+"/tracks/search?query="+encodeURIComponent(q)+"&limit=24&app_name=Tunely");return mapT(await r.json())}catch(e){toast("Gagal memuat. Cek internet.");return[]}}
